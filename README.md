@@ -1,6 +1,3 @@
-Here’s the complete **README.md** in proper Markdown formatting for your **LedgerX** project:
-
-```markdown
 # LedgerX – Web3 Expense Tracker
 
 LedgerX is a futuristic expense and income tracking app with **Web3 wallet authentication**.  
