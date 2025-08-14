@@ -2,9 +2,17 @@
 import { Button } from "@mui/material";
 import { ethers } from "ethers";
 import { useState } from "react";
+  
+import { MetaMaskInpageProvider } from "@metamask/providers";
+
+declare global {
+  interface Window {
+    ethereum?: MetaMaskInpageProvider;
+  }
+}
 
 export default function WalletConnectButton() {
-  const [address, setAddress] = useState(null);
+  const [address, setAddress] = useState<string | null>(null);
 
   async function onClickHandler() {
     if (!window.ethereum) {
