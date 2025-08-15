@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma'; // adjust relative path as needed
+import { PrismaClient } from "../generated/prisma"; // adjust relative path as needed
 
 declare global {
   var prisma: PrismaClient | undefined;
@@ -7,7 +7,7 @@ declare global {
 export const prisma =
   global.prisma ||
   new PrismaClient({
-    log: ['query', 'error', 'warn'],
+    log: ["query", "error", "warn"],
   });
 
-if (process.env.NODE_ENV !== 'production') global.prisma = prisma;
+if (process.env.NODE_ENV !== "production") global.prisma = prisma;
