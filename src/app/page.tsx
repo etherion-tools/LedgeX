@@ -1,10 +1,16 @@
 "use client";
-import WalletConnectButton from "@/component/Button/WalletConnectButton";
+
+import TabbedNavigation from "@/component/TabbedNavigation";
+import TransactionsCharts from "@/component/TransactionsCharts";
+import WalletCards from "@/component/WalletCards";
+
 
 export default function Page(){
   return (
     <main>
-      <WalletConnectButton/>
+      <WalletCards />
+      <TabbedNavigation />
+      <TransactionsCharts />
     </main>
   )
 }
