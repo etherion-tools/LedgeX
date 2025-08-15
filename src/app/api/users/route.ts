@@ -1,23 +1,19 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/utils/prisma";
+import { userinfo } from "@/libs/auth/users/user";
 
 export async function GET() {
   try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        wallet_address: true,
-        createdAt: true,
-      },
-    });
-    if (users.length === 0) {
-      return NextResponse.json({ error: "No users found" }, { status: 200 });
-    }
-    return NextResponse.json(users, { status: 200 });
+    const result = await userinfo();
+    return NextResponse.json(result, { status: result.status });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: "Failed to fetch users" },
+      {
+        success: false,
+        error: "Internal Server Error",
+        status: 500,
+        users: [],
+      },
       { status: 500 }
     );
   }
