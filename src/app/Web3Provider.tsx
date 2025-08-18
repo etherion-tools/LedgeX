@@ -1,5 +1,6 @@
+"use client";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { mainnet, polygon } from "wagmi/chains";
+import { mainnet, polygon } from "viem/chains";
 import { ReactNode } from "react";
 
 const config = createConfig({
