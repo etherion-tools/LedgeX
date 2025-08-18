@@ -1,8 +1,7 @@
 "use client";
 import { Button } from "@mui/material";
 import { ethers } from "ethers";
-import { useState } from "react";
-  
+
 import { MetaMaskInpageProvider } from "@metamask/providers";
 
 declare global {
@@ -11,9 +10,15 @@ declare global {
   }
 }
 
-export default function WalletConnectButton() {
-  const [address, setAddress] = useState<string | null>(null);
+type WalletConnectButtonProps = {
+  onConnect?: (address: string) => void;
+  walletAddress?: string;
+};
 
+export default function WalletConnectButton({
+  onConnect,
+  walletAddress,
+}: WalletConnectButtonProps) {
   async function onClickHandler() {
     if (!window.ethereum) {
       alert("Please install Metamask");
@@ -22,7 +27,7 @@ export default function WalletConnectButton() {
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const accounts = await provider.send("eth_requestAccounts", []);
-      setAddress(accounts[0]);
+      if (onConnect) onConnect(accounts[0]);
     } catch (err) {
       console.error("User rejected connection", err);
     }
@@ -31,8 +36,8 @@ export default function WalletConnectButton() {
   return (
     <main className="flex justify-center items-center h-screen">
       <Button variant="outlined" onClick={onClickHandler}>
-        {address
-          ? `${address.slice(0, 6)}...${address.slice(-4)}`
+        {walletAddress
+          ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
           : "Connect Wallet"}
       </Button>
     </main>
