@@ -4,8 +4,8 @@ import { mainnet, polygon } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
 
-// Replace with your real INFURA API key
-const INFURA_API_KEY = "your_infura_api_key"; 
+// get api key from .env file
+const INFURA_API_KEY = process.env.NEXT_PUBLIC_INFURA_API_KEY;
 
 const config = createConfig({
   chains: [mainnet, polygon],
@@ -13,7 +13,6 @@ const config = createConfig({
     [mainnet.id]: http(`https://mainnet.infura.io/v3/${INFURA_API_KEY}`),
     [polygon.id]: http("https://polygon-rpc.com"),
   },
-  
 });
 
 const queryClient = new QueryClient();
@@ -21,9 +20,7 @@ const queryClient = new QueryClient();
 export function Web3Provider({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   );
 }
