@@ -22,3 +22,13 @@ export async function userinfo() {
       users,
     };
 }
+
+export async function createUser({wallet_address}: {wallet_address: string}){
+ 
+  const user = await prisma.user.upsert({
+    where: {wallet_address},
+    update: {},
+    create: {wallet_address}
+  });
+  return user;
+}
