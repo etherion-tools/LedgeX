@@ -1,4 +1,5 @@
 "use client";
+import WalletConnectButton from "@/component/Button/WalletConnectButton";
 import Header from "@/component/Header/Header";
 import ReusableCard from "@/component/ReusableCard/reusablecard";
 import { useState } from "react";
@@ -10,7 +11,7 @@ export default function Page() {
     setWalletAddress(address);
   }
   return (
-    <div className="flex justify-center items-center min-h-screen bg-foreground">
+    <div className="flex justify-center items-center min-h-screen bg-background">
       <Header
         title="Test Page"
         walletAddress={walletAddress || ""}
