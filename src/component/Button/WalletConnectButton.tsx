@@ -1,47 +1,74 @@
 "use client";
 import { Button } from "@mui/material";
-import { ethers } from "ethers";
-import { MetaMaskInpageProvider } from "@metamask/providers";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useEffect, useState } from "react";
 
+// Ethereum declaration for (for chainId usage)
 declare global {
   interface Window {
-    ethereum?: MetaMaskInpageProvider;
+    ethereum?: {
+      chainId?: string;
+    };
   }
 }
 
-type WalletConnectButtonProps = {
-  onConnect?: (address: string) => void;
-};
+export default function WalletConnectButton() {
+  const { address, isConnected } = useAccount();
+  const { connect, connectors, status } = useConnect();
+  const { disconnect } = useDisconnect();
+  const [chainId, setChainId] = useState<number | undefined>(undefined);
 
-export default function WalletConnectButton({ onConnect }: WalletConnectButtonProps) {
-  async function onClickHandler() {
-    if (!window.ethereum) {
-      alert("Please install MetaMask");
-      return;
+  
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.ethereum?.chainId) {
+      setChainId(parseInt(window.ethereum.chainId, 16));
     }
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await provider.send("eth_requestAccounts", []);
-      if (onConnect) onConnect(accounts[0]);
-    } catch (err: unknown) { 
-      // type guard for MetaMask error object structure
-      if (
-        typeof err === "object" &&
-        err !== null &&
-        "code" in err &&
-        (err as { code: number }).code === 4001
-      ) {
-        alert("Wallet connection cancelled. Please approve your wallet to connect.");
-        return;
-      }
-      alert("Failed to connect wallet. Please try again.");
-      // No console.error here
-    }
+  }, [isConnected]);
+
+  // SSR/CSR mismatch prevention
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  if (!mounted) return null;
+
+  // Connect button Always show "Connect Wallet" label
+  if (!isConnected) {
+    return (
+      <>
+        {connectors.map((connector) => (
+          <Button
+            key={connector.id}
+            variant="outlined"
+            onClick={() => connect({ connector })}
+            disabled={status === "pending"}
+          >
+            Connect Wallet
+            {status === "pending" ? " (connecting...)" : ""}
+          </Button>
+        ))}
+      </>
+    );
   }
 
+  // Connected: show address, chain info, disconnect button
   return (
-    <Button variant="outlined" onClick={onClickHandler}>
-      Connect Wallet
-    </Button>
+    <div>
+      <span>
+        <strong>
+          {address?.slice(0, 6)}...{address?.slice(-4)}
+        </strong>
+        {" | "}
+        {chainId ? `Chain ID: ${chainId}` : "Chain: Unknown"}
+      </span>
+      <Button
+        color="error"
+        variant="contained"
+        onClick={() => disconnect()}
+        sx={{ marginLeft: 2 }}
+      >
+        Disconnect
+      </Button>
+    </div>
   );
 }
