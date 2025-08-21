@@ -1,7 +1,7 @@
 export default function TransactionTable() {
   return (
-    <div className="w-full my-2 max-w-4xl mx-auto">
-      <table className="w-full table-fixed border border-gray-200 rounded-lg bg-white">
+    <div className="w-full my-2 max-w-4xl mx-auto mt-16">
+      <table className="w-full table-fixed border border-gray-200 rounded-lg bg-background">
         <thead className="bg-gray-100">
           <tr>
             <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">
