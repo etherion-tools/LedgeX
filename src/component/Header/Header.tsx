@@ -13,43 +13,42 @@ export default function Header({ title }: HeaderProps) {
   const { isConnected, address } = useAccount();
   const { disconnect } = useDisconnect();
 
-  // Short address
+  // Truncate address
   const shortAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : "";
 
   return (
-    <header className="border-b shadow-md w-full py-4 px-6 bg-blue-950 dark:bg-foreground flex items-center justify-between">
-      <span className="text-2xl font-bold text-white">
-        {title}
-      </span>
-      <span className="text-lg">
+    <header className="border-b shadow-md w-full py-4 px-6 bg-blue-950 flex items-center justify-between">
+      <span className="text-2xl font-bold text-white">{title}</span>
+      <span className="text-lg flex items-center gap-2">
         {!isConnected ? (
-          // Show Connect Wallet button if not connected
-          <button
-            className="border px-4 py-2 rounded bg-white text-blue-900 font-bold hover:bg-gray-100"
-            onClick={() => setOpenModal(true)}
-          >
-            Connect Wallet
-          </button>
+          // Disconnected: show Connect Wallet button
+          <>
+            <button
+              className="border px-4 py-2 rounded bg-white text-blue-900 font-bold hover:bg-gray-100"
+              onClick={() => setOpenModal(true)}
+            >
+              Connect Wallet
+            </button>
+            {/* Modal*/}
+            <WalletModal open={openModal} onClose={() => setOpenModal(false)}>
+              <WalletConnectButton />
+            </WalletModal>
+          </>
         ) : (
-          // Show address and disconnect button if connected
-          <div className="flex items-center gap-3">
+          // Connected: show address + Disconnect button
+          <>
             <span className="font-bold text-white">{shortAddress}</span>
             <button
-              className="bg-red-600 hover:bg-red-700 text-white font-bold rounded px-4 py-2"
+              className="bg-red-600 hover:bg-red-700 text-white font-bold rounded px-4 py-2 transition"
               onClick={() => disconnect()}
             >
               Disconnect
             </button>
-          </div>
+          </>
         )}
       </span>
-
-      {/* Modal: Only open on connect wallet button click */}
-      <WalletModal open={openModal} onClose={() => setOpenModal(false)}>
-        <WalletConnectButton />
-      </WalletModal>
     </header>
   );
 }
