@@ -126,3 +126,51 @@ body {
     @apply bg-background text-foreground;
   }
 }
+/* chart-row: flex container for charts */
+.chart-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 32px;
+  margin-top: 48px;
+}
+
+/* Chart card box design */
+.chart-card {
+  background: #181818;
+  border-radius: 18px;
+  padding: 32px 28px;
+  box-shadow: 0 2px 18px rgba(0,0,0,0.3);
+  min-height: 370px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Line chart max width */
+.chart-line {
+  flex: 1 1 350px;
+  max-width: 700px;
+  width: 100%;
+}
+
+/* Pie chart max width */
+.chart-pie {
+  flex: 1 1 250px;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 900px) {
+  .chart-row {
+    flex-direction: column;
+    gap: 24px;
+    align-items: center;
+  }
+  .chart-line, .chart-pie {
+    max-width: 96vw;
+    min-width: 260px;
+  }
+}

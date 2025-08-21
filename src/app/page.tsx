@@ -1,23 +1,35 @@
 "use client";
-import ProtectedRoute from "@/component/ProtectedRoute"; 
+import ProtectedRoute from "@/component/ProtectedRoute";
 import Header from "@/component/Header/Header";
-import TabbedNavigation from "@/component/TabbedNavigation";
-import TransactionsCharts from "@/component/TransactionsCharts";
-import WalletCards from "@/component/WalletCards";
+import Navbar from "@/component/Navbar/navbar";
+import ReusableCard from "@/component/ReusableCard/reusablecard";
+import TransactionForm from "@/component/TransactionForm/TransactionForm";
+import TransactionTable from "@/component/TransactionTable/transactiontable";
+import dynamic from "next/dynamic";
+
+const LineChart = dynamic(() => import("@/component/Charts/linechart"), { ssr: false });
+const PieChart = dynamic(() => import("@/component/Charts/piechart"), { ssr: false });
 
 export default function Page() {
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-        <Header title="My Dapp" />
-        <div className="flex flex-col items-center px-4 py-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6 mt-2">
-            LedgerX Dashboard
-          </h1>
-          <WalletCards />
-          <TabbedNavigation />
-          <TransactionsCharts />
+      <main className="bg-foreground min-h-screen">
+        <Header title="LedgeX" />
+        <Navbar />
+        <TransactionForm />
+        <TransactionTable />
+        {/* CHART FLEX CONTAINER */}
+        <div className="chart-row">
+          <div className="chart-card chart-line">
+            <LineChart />
+          </div>
+          <div className="chart-card chart-pie">
+            <PieChart />
+          </div>
         </div>
+        
+        <ReusableCard name="Abdul Karim" walletAddress="0xabcd1234ef567890" />
+        
       </main>
     </ProtectedRoute>
   );

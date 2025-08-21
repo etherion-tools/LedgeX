@@ -30,15 +30,36 @@ export default function PieChart() {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false, // optional
     plugins: {
       legend: {
         position: "bottom" as const,
+        labels: {
+          color: "#fff",
+        },
       },
       tooltip: {
         enabled: true,
       },
+      title: {
+        display: true,
+        text: "Vote Distribution",
+        color: "#fff",
+      }
     },
   };
 
-  return <Pie data={data} options={options} />;
+  return (
+    <div style={{
+      maxWidth: "400px",
+      height: "350px",
+      margin: "16px auto 0px auto",
+      background: "#181818",
+      borderRadius: "16px",
+      padding: "24px",
+      boxShadow: "0 4px 16px rgba(0,0,0,0.2)"
+    }}>
+      <Pie data={data} options={options} />
+    </div>
+  );
 }
