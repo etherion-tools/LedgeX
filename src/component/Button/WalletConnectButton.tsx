@@ -18,12 +18,18 @@ export default function WalletConnectButton() {
   const { disconnect } = useDisconnect();
   const [chainId, setChainId] = useState<number | undefined>(undefined);
 
-  
   useEffect(() => {
     if (typeof window !== "undefined" && window.ethereum?.chainId) {
       setChainId(parseInt(window.ethereum.chainId, 16));
     }
   }, [isConnected]);
+
+  // Log user info when connected
+  useEffect(() => {
+    if (isConnected) {
+      console.log("User info:", { address, chainId, isConnected });
+    }
+  }, [isConnected, address, chainId]);
 
   // SSR/CSR mismatch prevention
   const [mounted, setMounted] = useState(false);
