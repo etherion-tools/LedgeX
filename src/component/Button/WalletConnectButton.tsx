@@ -24,6 +24,13 @@ export default function WalletConnectButton() {
     }
   }, [isConnected]);
 
+  // Log user info when connected
+  useEffect(() => {
+    if (isConnected) {
+      console.log("User info:", { address, chainId, isConnected });
+    }
+  }, [isConnected, address, chainId]);
+
   // SSR/CSR mismatch prevention
   const [mounted, setMounted] = useState(false);
   useEffect(() => {

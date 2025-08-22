@@ -4,7 +4,8 @@ import { prisma } from "@/utils/prisma";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const wallet_address = searchParams.get("wallet_address");
+    const wallet_address = searchParams.get("address");
+    console.log("Fetching transactions for wallet:", wallet_address);
 
     if (!wallet_address) {
       return NextResponse.json(
@@ -13,10 +14,25 @@ export async function GET(request: Request) {
       );
     }
 
-    const transactions = await prisma.transaction.findMany({
-      where: { user: { wallet_address } },
-      include: { user: true }, // optional
+    // Find the user by wallet address
+    const user = await prisma.user.findUnique({
+      where: { wallet_address },
     });
+    console.log("User found:", user);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "No user found for this wallet address" },
+        { status: 404 }
+      );
+    }
+
+    // Find transactions for the user
+    const transactions = await prisma.transaction.findMany({
+      where: { userId: user.id },
+      include: { user: true },
+    });
+    console.log("Transactions found:", transactions);
 
     return NextResponse.json(transactions, { status: 200 });
   } catch (error) {
