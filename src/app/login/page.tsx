@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function LoginPage() {
-  const { isConnected } = useAccount();
+  const {isConnected } = useAccount();
   const router = useRouter();
 
   useEffect(() => {
