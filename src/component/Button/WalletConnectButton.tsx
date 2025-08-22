@@ -3,7 +3,7 @@ import { Button } from "@mui/material";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useEffect, useState } from "react";
 
-// Ethereum declaration for (for chainId usage)
+// Chain ID declare
 declare global {
   interface Window {
     ethereum?: {
@@ -18,7 +18,6 @@ export default function WalletConnectButton() {
   const { disconnect } = useDisconnect();
   const [chainId, setChainId] = useState<number | undefined>(undefined);
 
-  
   useEffect(() => {
     if (typeof window !== "undefined" && window.ethereum?.chainId) {
       setChainId(parseInt(window.ethereum.chainId, 16));
@@ -32,7 +31,7 @@ export default function WalletConnectButton() {
   }, []);
   if (!mounted) return null;
 
-  // Connect button Always show "Connect Wallet" label
+  // If not connected: show connect options (multi-wallet future-ready)
   if (!isConnected) {
     return (
       <>
@@ -42,8 +41,9 @@ export default function WalletConnectButton() {
             variant="outlined"
             onClick={() => connect({ connector })}
             disabled={status === "pending"}
+            style={{ marginBottom: 8 }}
           >
-            Connect Wallet
+            {`Connect Wallet${connector.name ? ` (${connector.name})` : ""}`}
             {status === "pending" ? " (connecting...)" : ""}
           </Button>
         ))}
@@ -51,13 +51,11 @@ export default function WalletConnectButton() {
     );
   }
 
-  // Connected: show address, chain info, disconnect button
+  // If connected: show wallet info and disconnect
   return (
-    <div>
+    <div className="flex items-center gap-4">
       <span>
-        <strong>
-          {address?.slice(0, 6)}...{address?.slice(-4)}
-        </strong>
+        <strong>{address?.slice(0, 6)}...{address?.slice(-4)}</strong>
         {" | "}
         {chainId ? `Chain ID: ${chainId}` : "Chain: Unknown"}
       </span>
@@ -65,7 +63,7 @@ export default function WalletConnectButton() {
         color="error"
         variant="contained"
         onClick={() => disconnect()}
-        sx={{ marginLeft: 2 }}
+        style={{ marginLeft: 8 }}
       >
         Disconnect
       </Button>
