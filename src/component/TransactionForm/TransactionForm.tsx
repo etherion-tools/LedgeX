@@ -1,27 +1,52 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AmountInput from "./AmountInput";
 import CategorySelect from "./CategorySelect";
 import DescriptionTextarea from "./DescriptionTextarea";
 import DatePicker from "./DatePicker";
 
 const categories = [
-  "Food",
-  "Transport",
-  "Rent",
-  "Salary",
-  "Shopping",
-  "Others",
+  "Income",
+  "Expense",
 ];
 
-export default function TransactionForm() {
+type TransactionFormProps = {
+  transaction?: {
+    amount: number | string;
+    category: string;
+    description: string;
+    date: string;
+  };
+  onClose?: () => void; // callback to close modal
+  onSubmit?: (data: {
+    amount: number;
+    category: string;
+    description: string;
+    date: string;
+  }) => void;
+};
+
+export default function TransactionForm({ transaction, onClose, onSubmit }: TransactionFormProps) {
   const [form, setForm] = useState({
-    amount: "",
-    category: "",
-    description: "",
-    date: "",
+    amount: transaction?.amount.toString() || "",
+    category: transaction?.category || "",
+    description: transaction?.description || "",
+    date: transaction?.date || "",
   });
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Update form if transaction prop changes (important for editing different rows)
+  useEffect(() => {
+    if (transaction) {
+      setForm({
+        amount: transaction.amount.toString(),
+        category: transaction.category,
+        description: transaction.description,
+        date: transaction.date,
+      });
+    }
+  }, [transaction]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -29,11 +54,7 @@ export default function TransactionForm() {
 
   const validate = () => {
     const errs: { [key: string]: string } = {};
-    if (
-      !form.amount ||
-      isNaN(Number(form.amount)) ||
-      Number(form.amount) <= 0
-    ) {
+    if (!form.amount || isNaN(Number(form.amount)) || Number(form.amount) <= 0) {
       errs.amount = "Amount must be a positive number";
     }
     if (!form.category) {
@@ -49,9 +70,21 @@ export default function TransactionForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      alert("Transaction added!");
-      setForm({ amount: "", category: "", description: "", date: "" });
+      const data = {
+        amount: Number(form.amount),
+        category: form.category,
+        description: form.description,
+        date: form.date,
+      };
+      if (onSubmit) {
+        onSubmit(data); // call parent callback for add or edit
+      }
+      // Reset form if not editing
+      if (!transaction) {
+        setForm({ amount: "", category: "", description: "", date: "" });
+      }
       setErrors({});
+      onClose?.(); // close modal if provided
     }
   };
 
@@ -85,10 +118,8 @@ export default function TransactionForm() {
         className="w-full py-3 rounded-lg font-semibold text-white transition-all bg-gradient-to-r
           from-purple-600 to-blue-600 hover:from-blue-600 hover:to-purple-600 focus:outline-none shadow"
       >
-        Add Transaction
+        {transaction ? "Update Transaction" : "Add Transaction"}
       </button>
     </form>
   );
 }
-
-   
