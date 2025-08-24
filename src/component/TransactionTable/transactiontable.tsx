@@ -5,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
 import { MoreHorizontal, MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
@@ -34,12 +35,13 @@ export default function TransactionTable() {
   }, []);
 
   useEffect(() => {
+    console.log(address);
     if (!address || !isConnected) return;
     const fetchTransaction = async () => {
       try {
         const res = await fetch(`/api/transactions?address=${address}`);
         const data = await res.json();
-        setTransaction(data);
+        setTransaction(data.transactions);
       } catch (error) {
         setTransaction([]);
       }
