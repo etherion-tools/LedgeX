@@ -19,6 +19,7 @@ export default function ProtectedRoute({
   useEffect(() => {
     if (isClient && !isConnected) {
       router.replace("/login"); // Public/login/connect-wallet page
+    }
     if (isConnected === false) {
       router.replace("/login");
     }
