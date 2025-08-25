@@ -10,7 +10,8 @@ import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
-import WalletModal from "@/component/Modal/WalletModal"; 
+import WalletModal from "@/component/Modal/WalletModal";
+import { toast } from "sonner";
 
 type TransactionTypeProps = "INCOME" | "EXPENSE";
 
@@ -32,7 +33,9 @@ export default function TransactionTable() {
   const [editingTx, setEditingTx] = useState<TransactionProps | null>(null);
 
   // Delete integration
-  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
+    null
+  );
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -63,12 +66,13 @@ export default function TransactionTable() {
       });
       if (res.ok) {
         setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
+        toast.success("Transaction deleted successfully!"); //toast added
       } else {
         const data = await res.json();
-        alert(data.error || "Delete failed");
+        toast.error(data.error || "Delete failed");
       }
     } catch {
-      alert("Error deleting transaction");
+      toast.error("Error deleting transaction");
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
@@ -184,9 +188,7 @@ export default function TransactionTable() {
             <button
               disabled={deleting}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-              onClick={() =>
-                handleDelete(deleteTarget!.id, address as string)
-              }
+              onClick={() => handleDelete(deleteTarget!.id, address as string)}
             >
               {deleting ? "Deleting..." : "Delete"}
             </button>
