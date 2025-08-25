@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { MoreHorizontal, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
@@ -139,7 +139,13 @@ export default function TransactionTable() {
                 // Update the transaction array locally
                 setTransaction((prev) =>
                   prev.map((tx) =>
-                    tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
+                    tx.id === editingTx.id
+                      ? {
+                          ...tx,
+                          ...updatedTx,
+                          type: updatedTx.type.toUpperCase() as TransactionTypeProps,
+                        }
+                      : tx
                   )
                 );
                 setEditingTx(null); // close modal
