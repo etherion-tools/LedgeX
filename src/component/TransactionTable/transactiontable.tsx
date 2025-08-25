@@ -6,10 +6,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { MoreHorizontal, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
+import WalletModal from "@/component/Modal/WalletModal";
+import { toast } from "sonner";
 
 type TransactionTypeProps = "INCOME" | "EXPENSE";
 
@@ -24,18 +26,30 @@ type TransactionProps = {
   createdAt: string;
 };
 
+type TransactionFormSubmit = {
+  amount: number;
+  category: string;
+  description: string;
+  date: string;
+};
+
 export default function TransactionTable() {
   const { address, isConnected } = useAccount();
   const [transaction, setTransaction] = useState<TransactionProps[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [editingTx, setEditingTx] = useState<TransactionProps | null>(null);
 
+  // Delete integration
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
+    null
+  );
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    console.log(address);
     if (!address || !isConnected) return;
     const fetchTransaction = async () => {
       try {
@@ -43,11 +57,62 @@ export default function TransactionTable() {
         const data = await res.json();
         setTransaction(data.transactions);
       } catch (error) {
+        console.error("Failed to fetch transactions", error);
         setTransaction([]);
       }
     };
     fetchTransaction();
   }, [address, isConnected]);
+
+  async function handleDelete(txId: string, walletAddress: string) {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/transactions/${txId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress }),
+      });
+      if (res.ok) {
+        setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
+        toast.success("Transaction deleted successfully!");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Delete failed");
+      }
+    } catch {
+      toast.error("Error deleting transaction");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
+
+  // Edit submit logic
+  async function handleEdit(updatedTx: TransactionFormSubmit) {
+    if (!editingTx) return;
+    try {
+      const res = await fetch(`/api/transactions/update/${editingTx.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...updatedTx, userId: address }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTransaction((prev) =>
+          prev.map((tx) =>
+            tx.id === editingTx.id ? { ...tx, ...data.transaction } : tx
+          )
+        );
+        toast.success("Transaction updated successfully!");
+        setEditingTx(null);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Update failed!");
+      }
+    } catch {
+      toast.error("Network/server error!");
+    }
+  }
 
   if (!isMounted) return null;
 
@@ -110,7 +175,7 @@ export default function TransactionTable() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600 hover:bg-destructive hover:text-background"
-                          onClick={() => alert(`Delete ${tx.id}`)}
+                          onClick={() => setDeleteTarget(tx)}
                         >
                           Delete
                         </DropdownMenuItem>
@@ -135,19 +200,36 @@ export default function TransactionTable() {
             <TransactionForm
               transaction={editingTx}
               onClose={() => setEditingTx(null)}
-              onSubmit={(updatedTx) => {
-                // Update the transaction array locally
-                setTransaction((prev) =>
-                  prev.map((tx) =>
-                    tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
-                  )
-                );
-                setEditingTx(null); // close modal
-              }}
+              onSubmit={handleEdit}
             />
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <WalletModal open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+        <div className="text-center p-2">
+          <p className="mb-4 font-semibold text-lg">
+            Are you sure you want to delete this transaction?
+          </p>
+          <div className="flex justify-center gap-4 mt-2">
+            <button
+              disabled={deleting}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              onClick={() => handleDelete(deleteTarget!.id, address as string)}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+            <button
+              disabled={deleting}
+              className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
+              onClick={() => setDeleteTarget(null)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </WalletModal>
     </>
   );
 }
