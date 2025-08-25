@@ -5,6 +5,8 @@ import CategorySelect from "./CategorySelect";
 import DescriptionTextarea from "./DescriptionTextarea";
 import DatePicker from "./DatePicker";
 import TypeOfRevenue from "./TypeOfRevenue";
+import { useAccount } from "wagmi";
+import { toast } from "sonner";
 
 const categories = [
   "Salary",
@@ -88,16 +90,42 @@ export default function TransactionForm({
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  //Add Transaction Frontend Integration
+  const { address, isConnected } = useAccount();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
       const data = {
+        wallet: address,
         amount: Number(form.amount),
         category: form.category,
         description: form.description,
         date: form.date,
-        type: form.type,
+        type: form.type.toUpperCase(),
       };
+      if(!isConnected){
+        return setError("Connect your wallet to add a transaction")
+      }
+      try {
+        const res = await fetch("/api/addtransactions", {
+          method: "POST",
+          headers: { "Content-type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if(res.ok){
+          toast.success("Transaction Added Successfully!")
+        }
+        if (!res.ok) {
+          toast.error("Failed to add transaction")
+          return setError(result.error || "Failed to add transaction");
+        }
+      } catch {
+        console.error(error);
+        setError("Something went wrong while adding transaction");
+      }
       if (onSubmit) {
         onSubmit(data); // call parent callback for add or edit
       }
