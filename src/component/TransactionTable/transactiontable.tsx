@@ -6,10 +6,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { MoreHorizontal, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
+import WalletModal from "@/component/Modal/WalletModal"; 
 
 type TransactionTypeProps = "INCOME" | "EXPENSE";
 
@@ -30,12 +31,15 @@ export default function TransactionTable() {
   const [isMounted, setIsMounted] = useState(false);
   const [editingTx, setEditingTx] = useState<TransactionProps | null>(null);
 
+  // Delete integration
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    console.log(address);
     if (!address || !isConnected) return;
     const fetchTransaction = async () => {
       try {
@@ -48,6 +52,28 @@ export default function TransactionTable() {
     };
     fetchTransaction();
   }, [address, isConnected]);
+
+  async function handleDelete(txId: string, walletAddress: string) {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/transactions/${txId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress }),
+      });
+      if (res.ok) {
+        setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
+      } else {
+        const data = await res.json();
+        alert(data.error || "Delete failed");
+      }
+    } catch {
+      alert("Error deleting transaction");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
 
   if (!isMounted) return null;
 
@@ -110,7 +136,7 @@ export default function TransactionTable() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600 hover:bg-destructive hover:text-background"
-                          onClick={() => alert(`Delete ${tx.id}`)}
+                          onClick={() => setDeleteTarget(tx)}
                         >
                           Delete
                         </DropdownMenuItem>
@@ -136,18 +162,44 @@ export default function TransactionTable() {
               transaction={editingTx}
               onClose={() => setEditingTx(null)}
               onSubmit={(updatedTx) => {
-                // Update the transaction array locally
                 setTransaction((prev) =>
                   prev.map((tx) =>
                     tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
                   )
                 );
-                setEditingTx(null); // close modal
+                setEditingTx(null);
               }}
             />
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <WalletModal open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+        <div className="text-center p-2">
+          <p className="mb-4 font-semibold text-lg">
+            Are you sure you want to delete this transaction?
+          </p>
+          <div className="flex justify-center gap-4 mt-2">
+            <button
+              disabled={deleting}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              onClick={() =>
+                handleDelete(deleteTarget!.id, address as string)
+              }
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+            <button
+              disabled={deleting}
+              className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
+              onClick={() => setDeleteTarget(null)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </WalletModal>
     </>
   );
 }
