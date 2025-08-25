@@ -24,6 +24,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     });
     return NextResponse.json({ transaction: updatedTx }, { status: 200 });
   } catch (err) {
-    return NextResponse.json({ error: "Could not update transaction" }, { status: 500 });
-  }
+  console.error("Transaction update failed:", err); 
+  return NextResponse.json({ error: "Could not update transaction" }, { status: 500 });
+}
+
 }

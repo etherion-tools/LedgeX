@@ -26,6 +26,13 @@ type TransactionProps = {
   createdAt: string;
 };
 
+type TransactionFormSubmit = {
+  amount: number;
+  category: string;
+  description: string;
+  date: string;
+};
+
 export default function TransactionTable() {
   const { address, isConnected } = useAccount();
   const [transaction, setTransaction] = useState<TransactionProps[]>([]);
@@ -50,6 +57,7 @@ export default function TransactionTable() {
         const data = await res.json();
         setTransaction(data.transactions);
       } catch (error) {
+        console.error("Failed to fetch transactions", error);
         setTransaction([]);
       }
     };
@@ -66,7 +74,7 @@ export default function TransactionTable() {
       });
       if (res.ok) {
         setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
-        toast.success("Transaction deleted successfully!"); //toast added
+        toast.success("Transaction deleted successfully!");
       } else {
         const data = await res.json();
         toast.error(data.error || "Delete failed");
@@ -76,6 +84,33 @@ export default function TransactionTable() {
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
+    }
+  }
+
+  // Edit submit logic
+  async function handleEdit(updatedTx: TransactionFormSubmit) {
+    if (!editingTx) return;
+    try {
+      const res = await fetch(`/api/transactions/update/${editingTx.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...updatedTx, userId: address }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTransaction((prev) =>
+          prev.map((tx) =>
+            tx.id === editingTx.id ? { ...tx, ...data.transaction } : tx
+          )
+        );
+        toast.success("Transaction updated successfully!");
+        setEditingTx(null);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Update failed!");
+      }
+    } catch {
+      toast.error("Network/server error!");
     }
   }
 
@@ -165,14 +200,7 @@ export default function TransactionTable() {
             <TransactionForm
               transaction={editingTx}
               onClose={() => setEditingTx(null)}
-              onSubmit={(updatedTx) => {
-                setTransaction((prev) =>
-                  prev.map((tx) =>
-                    tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
-                  )
-                );
-                setEditingTx(null);
-              }}
+              onSubmit={handleEdit}
             />
           </div>
         </div>
