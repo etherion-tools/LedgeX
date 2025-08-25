@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { MoreHorizontal, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
@@ -73,7 +73,7 @@ export default function TransactionTable() {
             </tr>
           </thead>
           <tbody>
-            {transaction.length === 0 ? (
+            {Array.isArray(transaction) && transaction.length === 0 ? (
               <tr>
                 <td
                   colSpan={5}
@@ -82,7 +82,7 @@ export default function TransactionTable() {
                   No transactions found.
                 </td>
               </tr>
-            ) : (
+            ) : Array.isArray(transaction) ? (
               transaction.map((tx) => (
                 <tr key={tx.id}>
                   <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
@@ -119,7 +119,7 @@ export default function TransactionTable() {
                   </td>
                 </tr>
               ))
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>
@@ -139,7 +139,13 @@ export default function TransactionTable() {
                 // Update the transaction array locally
                 setTransaction((prev) =>
                   prev.map((tx) =>
-                    tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
+                    tx.id === editingTx.id
+                      ? {
+                          ...tx,
+                          ...updatedTx,
+                          type: updatedTx.type.toUpperCase() as TransactionTypeProps,
+                        }
+                      : tx
                   )
                 );
                 setEditingTx(null); // close modal
