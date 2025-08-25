@@ -10,6 +10,7 @@ import { MoreHorizontal, MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
+import Snackbar from "@mui/material/Snackbar";
 
 type TransactionTypeProps = "INCOME" | "EXPENSE";
 
@@ -29,6 +30,8 @@ export default function TransactionTable() {
   const [transaction, setTransaction] = useState<TransactionProps[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [editingTx, setEditingTx] = useState<TransactionProps | null>(null);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -144,18 +147,32 @@ export default function TransactionTable() {
             <TransactionForm
               transaction={editingTx}
               onClose={() => setEditingTx(null)}
-              onSubmit={(updatedTx) => {
-                setTransaction((prev) =>
-                  prev.map((tx) =>
-                    tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
-                  )
-                );
-                setEditingTx(null);
+              onSubmit={async (updatedTx) => {
+                try {
+                  setTransaction((prev) =>
+                    prev.map((tx) =>
+                      tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
+                    )
+                  );
+                  setEditingTx(null);
+                  setSnackbarMessage("Transaction edited successfully!");
+                  setSnackbarOpen(true);
+                } catch (error) {
+                  setSnackbarMessage("Failed to edit transaction.");
+                  setSnackbarOpen(true);
+                }
               }}
             />
           </div>
         </div>
       )}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      />
     </>
   );
 }
