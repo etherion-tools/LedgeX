@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { Toaster } from "sonner";
 import { Web3Provider } from "./Web3Provider";
+import { Toaster } from "sonner"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
       >
         {/* Web3Provider for wagmi and react-query context */}
         <Web3Provider>
+          <Toaster richColors position="top-center" /> 
           <Toaster />
           {children}
         </Web3Provider>

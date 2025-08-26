@@ -10,6 +10,8 @@ import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
+import WalletModal from "@/component/Modal/WalletModal";
+import { toast } from "sonner";
 import WalletModal from "@/component/Modal/WalletModal"; 
 
 type TransactionTypeProps = "INCOME" | "EXPENSE";
@@ -32,6 +34,9 @@ export default function TransactionTable() {
   const [editingTx, setEditingTx] = useState<TransactionProps | null>(null);
 
   // Delete integration
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
+    null
+  );
   const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -63,6 +68,13 @@ export default function TransactionTable() {
       });
       if (res.ok) {
         setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
+        toast.success("Transaction deleted successfully!"); //toast added
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Delete failed");
+      }
+    } catch {
+      toast.error("Error deleting transaction");
       } else {
         const data = await res.json();
         alert(data.error || "Delete failed");
