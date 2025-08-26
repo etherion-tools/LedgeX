@@ -50,7 +50,9 @@ export default function TransactionTable() {
       try {
         const res = await fetch(`/api/transactions?address=${address}`);
         const data = await res.json();
-        setTransaction(data.transactions);
+        setTransaction(
+          Array.isArray(data.transactions) ? data.transactions : []
+        );
       } catch (error) {
         setTransaction([]);
       }
@@ -91,6 +93,10 @@ export default function TransactionTable() {
 
   return (
     <>
+      <div className="w-full my-2 max-w-4xl mx-auto mt-16 sm:mx-4">
+        <div className="overflow-x-auto rounded-lg shadow">
+          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+            <thead className="bg-gray-100">
       <div className="w-full my-2 max-w-4xl mx-auto mt-16">
         <table className="w-full table-fixed border border-gray-200 rounded-lg bg-background">
           <thead className="bg-gray-100">
@@ -113,13 +119,77 @@ export default function TransactionTable() {
           <tbody>
             {Array.isArray(transaction) && transaction.length === 0 ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center"
-                >
-                  No transactions found.
-                </td>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
+                  Date
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
+                  Description
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
+                  Amount
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap hidden sm:table-cell">
+                  Category
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
+                  Actions
+                </th>
               </tr>
+            </thead>
+            <tbody>
+              {(Array.isArray(transaction) ? transaction.length : 0) === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-6 text-center text-gray-500"
+                  >
+                    No transactions found.
+                  </td>
+                </tr>
+              ) : (
+                transaction.map((tx, idx) => (
+                  <tr
+                    key={tx.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.date.slice(0, 10)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap max-w-xs truncate">
+                      {tx.description}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.amount}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap hidden sm:table-cell">
+                      {tx.category}
+                    </td>
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="mx-auto flex items-center justify-center p-2 hover:bg-gray-100 rounded-full">
+                            <MoreVertical className="cursor-pointer text-gray-600" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditingTx(tx)}>
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 hover:bg-destructive hover:text-background"
+                            onClick={() => alert(`Delete ${tx.id}`)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
             ) : Array.isArray(transaction) ? (
               transaction.map((tx) => (
                 <tr key={tx.id}>
@@ -163,11 +233,11 @@ export default function TransactionTable() {
       </div>
       {editingTx && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-black/50"
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
           onClick={() => setEditingTx(null)}
         >
           <div
-            className="rounded-lg max-w-md w-full"
+            className="rounded-lg max-w-md w-full bg-white p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <TransactionForm
