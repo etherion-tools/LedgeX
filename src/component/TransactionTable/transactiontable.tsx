@@ -6,11 +6,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { MoreHorizontal, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
 import Snackbar from "@mui/material/Snackbar";
+import WalletModal from "@/component/Modal/WalletModal";
+import { toast } from "sonner";
+import WalletModal from "@/component/Modal/WalletModal"; 
 
 type TransactionTypeProps = "INCOME" | "EXPENSE";
 
@@ -33,12 +36,18 @@ export default function TransactionTable() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
+  // Delete integration
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
+    null
+  );
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    console.log(address);
     if (!address || !isConnected) return;
     const fetchTransaction = async () => {
       try {
@@ -54,6 +63,35 @@ export default function TransactionTable() {
     fetchTransaction();
   }, [address, isConnected]);
 
+  async function handleDelete(txId: string, walletAddress: string) {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/transactions/${txId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress }),
+      });
+      if (res.ok) {
+        setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
+        toast.success("Transaction deleted successfully!"); //toast added
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Delete failed");
+      }
+    } catch {
+      toast.error("Error deleting transaction");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Delete failed");
+      }
+    } catch {
+      alert("Error deleting transaction");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
+
   if (!isMounted) return null;
 
   return (
@@ -62,6 +100,27 @@ export default function TransactionTable() {
         <div className="overflow-x-auto rounded-lg shadow">
           <table className="min-w-full bg-white border border-gray-200 rounded-lg">
             <thead className="bg-gray-100">
+      <div className="w-full my-2 max-w-4xl mx-auto mt-16">
+        <table className="w-full table-fixed border border-gray-200 rounded-lg bg-background">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">
+                Date
+              </th>
+              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">
+                Description
+              </th>
+              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">
+                Amount
+              </th>
+              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">
+                Category
+              </th>
+              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-12"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.isArray(transaction) && transaction.length === 0 ? (
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
                   Date
@@ -134,6 +193,92 @@ export default function TransactionTable() {
             </tbody>
           </table>
         </div>
+                  </td>
+                </tr>
+              ) : (
+                transaction.map((tx, idx) => (
+                  <tr
+                    key={tx.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.date.slice(0, 10)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap max-w-xs truncate">
+                      {tx.description}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.amount}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap hidden sm:table-cell">
+                      {tx.category}
+                    </td>
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="mx-auto flex items-center justify-center p-2 hover:bg-gray-100 rounded-full">
+                            <MoreVertical className="cursor-pointer text-gray-600" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditingTx(tx)}>
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 hover:bg-destructive hover:text-background"
+                            onClick={() => alert(`Delete ${tx.id}`)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+            ) : Array.isArray(transaction) ? (
+              transaction.map((tx) => (
+                <tr key={tx.id}>
+                  <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
+                    {tx.date.slice(0, 10)}
+                  </td>
+                  <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
+                    {tx.description}
+                  </td>
+                  <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
+                    {tx.amount}
+                  </td>
+                  <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
+                    {tx.category}
+                  </td>
+                  <td className="text-center border-t border-gray-200">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="mx-auto flex items-center justify-center p-2 hover:bg-gray-100 rounded-full">
+                          <MoreVertical className="cursor-pointer text-gray-600" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setEditingTx(tx)}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600 hover:bg-destructive hover:text-background"
+                          onClick={() => setDeleteTarget(tx)}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              ))
+            ) : null}
+          </tbody>
+        </table>
       </div>
       {editingTx && (
         <div
@@ -161,6 +306,19 @@ export default function TransactionTable() {
                   setSnackbarMessage("Failed to edit transaction.");
                   setSnackbarOpen(true);
                 }
+              onSubmit={(updatedTx) => {
+                setTransaction((prev) =>
+                  prev.map((tx) =>
+                    tx.id === editingTx.id
+                      ? {
+                          ...tx,
+                          ...updatedTx,
+                          type: updatedTx.type.toUpperCase() as TransactionTypeProps,
+                        }
+                      : tx
+                  )
+                );
+                setEditingTx(null);
               }}
             />
           </div>
@@ -173,6 +331,32 @@ export default function TransactionTable() {
         message={snackbarMessage}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
+      {/* Delete Confirmation Modal */}
+      <WalletModal open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+        <div className="text-center p-2">
+          <p className="mb-4 font-semibold text-lg">
+            Are you sure you want to delete this transaction?
+          </p>
+          <div className="flex justify-center gap-4 mt-2">
+            <button
+              disabled={deleting}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              onClick={() =>
+                handleDelete(deleteTarget!.id, address as string)
+              }
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+            <button
+              disabled={deleting}
+              className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
+              onClick={() => setDeleteTarget(null)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </WalletModal>
     </>
   );
 }
