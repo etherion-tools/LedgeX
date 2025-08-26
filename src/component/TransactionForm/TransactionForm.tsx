@@ -8,6 +8,7 @@ import TypeOfRevenue from "./TypeOfRevenue";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
 
+
 const categories = [
   "Salary",
   "Freelance",
@@ -104,6 +105,7 @@ export default function TransactionForm({
         description: form.description,
         date: form.date,
         type: form.type.toUpperCase(),
+        type: form.type,
       };
       if(!isConnected){
         return setError("Connect your wallet to add a transaction")
