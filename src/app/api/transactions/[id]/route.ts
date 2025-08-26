@@ -3,8 +3,11 @@ import { prisma } from "@/utils/prisma";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { params } = context;
+  const { id: transactionId } = params;
+
   const body = await request.json();
   const { walletAddress } = body;
 
@@ -12,7 +15,15 @@ export async function DELETE(
     return NextResponse.json({ error: "Wallet Address missing" }, { status: 401 });
   }
 
-  const transactionId = params.id;
+  // First, fetch user with this wallet address
+  const user = await prisma.user.findUnique({
+    where: { wallet_address: walletAddress }
+  });
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  // Then fetch the transaction
   const transaction = await prisma.transaction.findUnique({
     where: { id: transactionId },
   });
@@ -21,9 +32,8 @@ export async function DELETE(
     return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
   }
 
-  if (
-    transaction.userId.toLowerCase() !== walletAddress.toLowerCase()
-  ) {
+  // Now do UUID-based owner check (no more address string): transaction.userId vs user.id
+  if (transaction.userId !== user.id) {
     return NextResponse.json({ error: "Forbidden - Not Owner" }, { status: 403 });
   }
 
