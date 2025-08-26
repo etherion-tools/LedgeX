@@ -12,6 +12,7 @@ import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
 import WalletModal from "@/component/Modal/WalletModal";
 import { toast } from "sonner";
+import WalletModal from "@/component/Modal/WalletModal"; 
 
 type TransactionTypeProps = "INCOME" | "EXPENSE";
 
@@ -36,6 +37,7 @@ export default function TransactionTable() {
   const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
     null
   );
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -73,6 +75,12 @@ export default function TransactionTable() {
       }
     } catch {
       toast.error("Error deleting transaction");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Delete failed");
+      }
+    } catch {
+      alert("Error deleting transaction");
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
@@ -103,7 +111,7 @@ export default function TransactionTable() {
             </tr>
           </thead>
           <tbody>
-            {transaction.length === 0 ? (
+            {Array.isArray(transaction) && transaction.length === 0 ? (
               <tr>
                 <td
                   colSpan={5}
@@ -112,7 +120,7 @@ export default function TransactionTable() {
                   No transactions found.
                 </td>
               </tr>
-            ) : (
+            ) : Array.isArray(transaction) ? (
               transaction.map((tx) => (
                 <tr key={tx.id}>
                   <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
@@ -149,7 +157,7 @@ export default function TransactionTable() {
                   </td>
                 </tr>
               ))
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>
@@ -168,7 +176,13 @@ export default function TransactionTable() {
               onSubmit={(updatedTx) => {
                 setTransaction((prev) =>
                   prev.map((tx) =>
-                    tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
+                    tx.id === editingTx.id
+                      ? {
+                          ...tx,
+                          ...updatedTx,
+                          type: updatedTx.type.toUpperCase() as TransactionTypeProps,
+                        }
+                      : tx
                   )
                 );
                 setEditingTx(null);
@@ -188,7 +202,9 @@ export default function TransactionTable() {
             <button
               disabled={deleting}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-              onClick={() => handleDelete(deleteTarget!.id, address as string)}
+              onClick={() =>
+                handleDelete(deleteTarget!.id, address as string)
+              }
             >
               {deleting ? "Deleting..." : "Delete"}
             </button>
