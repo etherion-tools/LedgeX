@@ -57,13 +57,13 @@ export default function TransactionTable() {
   }, [address, isConnected]);
 
   async function handleDelete(txId: string, walletAddress: string) {
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/transactions/${txId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletAddress }),
-      });
+  setDeleting(true);
+  try {
+    const res = await fetch(`/api/transactions/${txId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ walletAddress }),
+    });
       if (res.ok) {
         setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
         toast.success("Transaction deleted successfully!");
