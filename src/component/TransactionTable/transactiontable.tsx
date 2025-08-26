@@ -1,11 +1,7 @@
 "use client";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-
 import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
@@ -13,15 +9,11 @@ import TransactionForm from "../TransactionForm/TransactionForm";
 import WalletModal from "@/component/Modal/WalletModal";
 import { toast } from "sonner";
 import Snackbar from "@mui/material/Snackbar";
-import WalletModal from "@/component/Modal/WalletModal";
-import { toast } from "sonner";
-import WalletModal from "@/component/Modal/WalletModal"; 
 
 type TransactionTypeProps = "INCOME" | "EXPENSE";
-
 type TransactionProps = {
   id: string;
-  userId: string;
+  userId: string; // will be UUID
   type: TransactionTypeProps;
   category: string;
   amount: number;
@@ -29,12 +21,14 @@ type TransactionProps = {
   date: string;
   createdAt: string;
 };
-
 type TransactionFormSubmit = {
+  id?: string;
+  userId: string; // UUID
   amount: number;
   category: string;
   description: string;
   date: string;
+  type: string;
 };
 
 export default function TransactionTable() {
@@ -44,42 +38,19 @@ export default function TransactionTable() {
   const [editingTx, setEditingTx] = useState<TransactionProps | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-
-  // Delete integration
-  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
-    null
-  );
   const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Delete integration
-  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
-    null
-  );
-  const [deleting, setDeleting] = useState(false);
-
-  // Delete integration
-  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
-    null
-  );
-  const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
+  useEffect(() => { setIsMounted(true); }, []);
   useEffect(() => {
     if (!address || !isConnected) return;
     const fetchTransaction = async () => {
       try {
         const res = await fetch(`/api/transactions?address=${address}`);
         const data = await res.json();
-        setTransaction(
-          Array.isArray(data.transactions) ? data.transactions : []
-        );
+        setTransaction(Array.isArray(data.transactions) ? data.transactions : []);
       } catch (error) {
-        console.error("Failed to fetch transactions", error);
-        setTransaction([]);
+        console.error("Failed to fetch transactions", error); setTransaction([]);
       }
     };
     fetchTransaction();
@@ -96,27 +67,29 @@ export default function TransactionTable() {
       if (res.ok) {
         setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
         toast.success("Transaction deleted successfully!");
-        toast.success("Transaction deleted successfully!");
       } else {
         const data = await res.json();
         toast.error(data.error || "Delete failed");
       }
-    } catch {
-      toast.error("Error deleting transaction");
+    } catch (error) {
+      console.error("Error deleting transaction", error); toast.error("Error deleting transaction");
     } finally {
-      setDeleting(false);
-      setDeleteTarget(null);
+      setDeleting(false); setDeleteTarget(null);
     }
   }
 
-  // Edit submit logic
+  // Main FIX (edit): send editingTx.userId (UUID) to update API!
   async function handleEdit(updatedTx: TransactionFormSubmit) {
     if (!editingTx) return;
     try {
       const res = await fetch(`/api/transactions/update/${editingTx.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...updatedTx, userId: address }),
+        body: JSON.stringify({
+          ...updatedTx,
+          userId: editingTx.userId, //  always UUID from transaction row
+          type: updatedTx.type,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -131,96 +104,39 @@ export default function TransactionTable() {
         const err = await res.json();
         toast.error(err.error || "Update failed!");
       }
-    } catch {
-      toast.error("Network/server error!");
-      } else {
-        const data = await res.json();
-        alert(data.error || "Delete failed");
-      }
-    } catch {
-      alert("Error deleting transaction");
-    } finally {
-      setDeleting(false);
-      setDeleteTarget(null);
+    } catch (error) {
+      console.error("Network/server error!", error); toast.error("Network/server error!");
     }
   }
 
   if (!isMounted) return null;
-
   return (
     <>
       <div className="w-full my-2 max-w-4xl mx-auto mt-16 sm:mx-4">
         <div className="overflow-x-auto rounded-lg shadow">
           <table className="min-w-full bg-white border border-gray-200 rounded-lg">
             <thead className="bg-gray-100">
-      <div className="w-full my-2 max-w-4xl mx-auto mt-16">
-        <table className="w-full table-fixed border border-gray-200 rounded-lg bg-background">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">
-                Date
-              </th>
-              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">
-                Description
-              </th>
-              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">
-                Amount
-              </th>
-              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">
-                Category
-              </th>
-              <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-12"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(transaction) && transaction.length === 0 ? (
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
-                  Date
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
-                  Description
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
-                  Amount
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap hidden sm:table-cell">
-                  Category
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
-                  Actions
-                </th>
+                <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">Date</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">Description</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">Amount</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/4">Category</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-12"></th>
               </tr>
             </thead>
             <tbody>
-              {(Array.isArray(transaction) ? transaction.length : 0) === 0 ? (
+              {transaction.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-6 text-center text-gray-500"
-                  >
-                    No transactions found.
-                  </td>
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No transactions found.</td>
                 </tr>
               ) : (
-                transaction.map((tx, idx) => (
-                  <tr
-                    key={tx.id}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                      {tx.date.slice(0, 10)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap max-w-xs truncate">
-                      {tx.description}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                      {tx.amount}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap hidden sm:table-cell">
-                      {tx.category}
-                    </td>
-                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                transaction.map((tx) => (
+                  <tr key={tx.id}>
+                    <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">{tx.date.slice(0, 10)}</td>
+                    <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">{tx.description}</td>
+                    <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">{tx.amount}</td>
+                    <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">{tx.category}</td>
+                    <td className="text-center border-t border-gray-200">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="mx-auto flex items-center justify-center p-2 hover:bg-gray-100 rounded-full">
@@ -228,13 +144,8 @@ export default function TransactionTable() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditingTx(tx)}>
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600 hover:bg-destructive hover:text-background"
-                            onClick={() => alert(`Delete ${tx.id}`)}
-                          >
+                          <DropdownMenuItem onClick={() => setEditingTx(tx)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600 hover:bg-destructive hover:text-background" onClick={() => setDeleteTarget(tx)}>
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -246,172 +157,28 @@ export default function TransactionTable() {
             </tbody>
           </table>
         </div>
-                  </td>
-                </tr>
-              ) : (
-                transaction.map((tx, idx) => (
-                  <tr
-                    key={tx.id}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                      {tx.date.slice(0, 10)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap max-w-xs truncate">
-                      {tx.description}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                      {tx.amount}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap hidden sm:table-cell">
-                      {tx.category}
-                    </td>
-                    <td className="px-4 py-3 text-center whitespace-nowrap">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="mx-auto flex items-center justify-center p-2 hover:bg-gray-100 rounded-full">
-                            <MoreVertical className="cursor-pointer text-gray-600" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditingTx(tx)}>
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600 hover:bg-destructive hover:text-background"
-                            onClick={() => alert(`Delete ${tx.id}`)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-            ) : Array.isArray(transaction) ? (
-              transaction.map((tx) => (
-                <tr key={tx.id}>
-                  <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
-                    {tx.date.slice(0, 10)}
-                  </td>
-                  <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
-                    {tx.description}
-                  </td>
-                  <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
-                    {tx.amount}
-                  </td>
-                  <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
-                    {tx.category}
-                  </td>
-                  <td className="text-center border-t border-gray-200">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="mx-auto flex items-center justify-center p-2 hover:bg-gray-100 rounded-full">
-                          <MoreVertical className="cursor-pointer text-gray-600" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingTx(tx)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600 hover:bg-destructive hover:text-background"
-                          onClick={() => setDeleteTarget(tx)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))
-            ) : null}
-          </tbody>
-        </table>
       </div>
       {editingTx && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-          onClick={() => setEditingTx(null)}
-        >
-          <div
-            className="rounded-lg max-w-md w-full bg-white p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <TransactionForm
-              transaction={editingTx}
-              onClose={() => setEditingTx(null)}
-              onSubmit={handleEdit}
-              onSubmit={async (updatedTx) => {
-                try {
-                  setTransaction((prev) =>
-                    prev.map((tx) =>
-                      tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
-                    )
-                  );
-                  setEditingTx(null);
-                  setSnackbarMessage("Transaction edited successfully!");
-                  setSnackbarOpen(true);
-                } catch (error) {
-                  setSnackbarMessage("Failed to edit transaction.");
-                  setSnackbarOpen(true);
-                }
-              onSubmit={(updatedTx) => {
-                setTransaction((prev) =>
-                  prev.map((tx) =>
-                    tx.id === editingTx.id
-                      ? {
-                          ...tx,
-                          ...updatedTx,
-                          type: updatedTx.type.toUpperCase() as TransactionTypeProps,
-                        }
-                      : tx
-                  )
-                );
-                setEditingTx(null);
-              }}
-            />
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50" onClick={() => setEditingTx(null)}>
+          <div className="rounded-lg max-w-md w-full bg-white p-6" onClick={(e) => e.stopPropagation()}>
+            <TransactionForm transaction={editingTx} onClose={() => setEditingTx(null)} onSubmit={handleEdit} />
           </div>
         </div>
       )}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
-        message={snackbarMessage}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      />
-      {/* Delete Confirmation Modal */}
       <WalletModal open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
         <div className="text-center p-2">
-          <p className="mb-4 font-semibold text-lg">
-            Are you sure you want to delete this transaction?
-          </p>
+          <p className="mb-4 font-semibold text-lg">Are you sure you want to delete this transaction?</p>
           <div className="flex justify-center gap-4 mt-2">
-            <button
-              disabled={deleting}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-              onClick={() => handleDelete(deleteTarget!.id, address as string)}
-              onClick={() =>
-                handleDelete(deleteTarget!.id, address as string)
-              }
-            >
+            <button disabled={deleting} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700" onClick={() => handleDelete(deleteTarget!.id, address as string)}>
               {deleting ? "Deleting..." : "Delete"}
             </button>
-            <button
-              disabled={deleting}
-              className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
-              onClick={() => setDeleteTarget(null)}
-            >
+            <button disabled={deleting} className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300" onClick={() => setDeleteTarget(null)}>
               Cancel
             </button>
           </div>
         </div>
       </WalletModal>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)} message={snackbarMessage} anchorOrigin={{ vertical: "bottom", horizontal: "center" }} />
     </>
   );
 }
