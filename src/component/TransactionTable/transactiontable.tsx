@@ -10,6 +10,8 @@ import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
+import WalletModal from "@/component/Modal/WalletModal";
+import { toast } from "sonner";
 import Snackbar from "@mui/material/Snackbar";
 import WalletModal from "@/component/Modal/WalletModal";
 import { toast } from "sonner";
@@ -41,6 +43,12 @@ export default function TransactionTable() {
     null
   );
   const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Delete integration
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
+    null
+  );
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
