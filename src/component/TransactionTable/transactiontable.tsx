@@ -10,6 +10,7 @@ import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
+import Snackbar from "@mui/material/Snackbar";
 import WalletModal from "@/component/Modal/WalletModal";
 import { toast } from "sonner";
 import WalletModal from "@/component/Modal/WalletModal"; 
@@ -32,6 +33,8 @@ export default function TransactionTable() {
   const [transaction, setTransaction] = useState<TransactionProps[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [editingTx, setEditingTx] = useState<TransactionProps | null>(null);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   // Delete integration
   const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
@@ -190,6 +193,52 @@ export default function TransactionTable() {
             </tbody>
           </table>
         </div>
+                  </td>
+                </tr>
+              ) : (
+                transaction.map((tx, idx) => (
+                  <tr
+                    key={tx.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.date.slice(0, 10)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap max-w-xs truncate">
+                      {tx.description}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.amount}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap hidden sm:table-cell">
+                      {tx.category}
+                    </td>
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="mx-auto flex items-center justify-center p-2 hover:bg-gray-100 rounded-full">
+                            <MoreVertical className="cursor-pointer text-gray-600" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditingTx(tx)}>
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 hover:bg-destructive hover:text-background"
+                            onClick={() => alert(`Delete ${tx.id}`)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
             ) : Array.isArray(transaction) ? (
               transaction.map((tx) => (
                 <tr key={tx.id}>
@@ -243,6 +292,20 @@ export default function TransactionTable() {
             <TransactionForm
               transaction={editingTx}
               onClose={() => setEditingTx(null)}
+              onSubmit={async (updatedTx) => {
+                try {
+                  setTransaction((prev) =>
+                    prev.map((tx) =>
+                      tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
+                    )
+                  );
+                  setEditingTx(null);
+                  setSnackbarMessage("Transaction edited successfully!");
+                  setSnackbarOpen(true);
+                } catch (error) {
+                  setSnackbarMessage("Failed to edit transaction.");
+                  setSnackbarOpen(true);
+                }
               onSubmit={(updatedTx) => {
                 setTransaction((prev) =>
                   prev.map((tx) =>
@@ -261,7 +324,13 @@ export default function TransactionTable() {
           </div>
         </div>
       )}
-
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      />
       {/* Delete Confirmation Modal */}
       <WalletModal open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
         <div className="text-center p-2">
