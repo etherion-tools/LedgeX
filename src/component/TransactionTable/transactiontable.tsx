@@ -30,6 +30,13 @@ type TransactionProps = {
   createdAt: string;
 };
 
+type TransactionFormSubmit = {
+  amount: number;
+  category: string;
+  description: string;
+  date: string;
+};
+
 export default function TransactionTable() {
   const { address, isConnected } = useAccount();
   const [transaction, setTransaction] = useState<TransactionProps[]>([]);
@@ -43,6 +50,12 @@ export default function TransactionTable() {
     null
   );
   const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Delete integration
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
+    null
+  );
   const [deleting, setDeleting] = useState(false);
 
   // Delete integration
@@ -65,6 +78,7 @@ export default function TransactionTable() {
           Array.isArray(data.transactions) ? data.transactions : []
         );
       } catch (error) {
+        console.error("Failed to fetch transactions", error);
         setTransaction([]);
       }
     };
@@ -81,13 +95,44 @@ export default function TransactionTable() {
       });
       if (res.ok) {
         setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
-        toast.success("Transaction deleted successfully!"); //toast added
+        toast.success("Transaction deleted successfully!");
+        toast.success("Transaction deleted successfully!");
       } else {
         const data = await res.json();
         toast.error(data.error || "Delete failed");
       }
     } catch {
       toast.error("Error deleting transaction");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
+
+  // Edit submit logic
+  async function handleEdit(updatedTx: TransactionFormSubmit) {
+    if (!editingTx) return;
+    try {
+      const res = await fetch(`/api/transactions/update/${editingTx.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...updatedTx, userId: address }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTransaction((prev) =>
+          prev.map((tx) =>
+            tx.id === editingTx.id ? { ...tx, ...data.transaction } : tx
+          )
+        );
+        toast.success("Transaction updated successfully!");
+        setEditingTx(null);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Update failed!");
+      }
+    } catch {
+      toast.error("Network/server error!");
       } else {
         const data = await res.json();
         alert(data.error || "Delete failed");
@@ -300,6 +345,7 @@ export default function TransactionTable() {
             <TransactionForm
               transaction={editingTx}
               onClose={() => setEditingTx(null)}
+              onSubmit={handleEdit}
               onSubmit={async (updatedTx) => {
                 try {
                   setTransaction((prev) =>
@@ -349,6 +395,7 @@ export default function TransactionTable() {
             <button
               disabled={deleting}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              onClick={() => handleDelete(deleteTarget!.id, address as string)}
               onClick={() =>
                 handleDelete(deleteTarget!.id, address as string)
               }

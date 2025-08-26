@@ -32,6 +32,7 @@ export default function RootLayout({
       >
         {/* Web3Provider for wagmi and react-query context */}
         <Web3Provider>
+          <Toaster richColors position="top-center" /> 
           <Toaster richColors position="top-center" />
           {children}
         </Web3Provider>
