@@ -4,10 +4,16 @@ import AmountInput from "./AmountInput";
 import CategorySelect from "./CategorySelect";
 import DescriptionTextarea from "./DescriptionTextarea";
 import DatePicker from "./DatePicker";
+import TypeOfRevenue from "./TypeOfRevenue";
 
 const categories = [
-  "Income",
-  "Expense",
+  "Salary",
+  "Freelance",
+  "Business",
+  "Investment",
+  "Bonus",
+  "Gift",
+  "Others",
 ];
 
 type TransactionFormProps = {
@@ -16,6 +22,7 @@ type TransactionFormProps = {
     category: string;
     description: string;
     date: string;
+    type?: string;
   };
   onClose?: () => void; // callback to close modal
   onSubmit?: (data: {
@@ -23,15 +30,21 @@ type TransactionFormProps = {
     category: string;
     description: string;
     date: string;
+    type: string;
   }) => void;
 };
 
-export default function TransactionForm({ transaction, onClose, onSubmit }: TransactionFormProps) {
+export default function TransactionForm({
+  transaction,
+  onClose,
+  onSubmit,
+}: TransactionFormProps) {
   const [form, setForm] = useState({
-    amount: transaction?.amount.toString() || "",
+    amount: transaction?.amount?.toString() || "",
     category: transaction?.category || "",
     description: transaction?.description || "",
     date: transaction?.date || "",
+    type: transaction?.type || "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -44,6 +57,7 @@ export default function TransactionForm({ transaction, onClose, onSubmit }: Tran
         category: transaction.category,
         description: transaction.description,
         date: transaction.date,
+        type: transaction.type || "",
       });
     }
   }, [transaction]);
@@ -54,8 +68,15 @@ export default function TransactionForm({ transaction, onClose, onSubmit }: Tran
 
   const validate = () => {
     const errs: { [key: string]: string } = {};
-    if (!form.amount || isNaN(Number(form.amount)) || Number(form.amount) <= 0) {
+    if (
+      !form.amount ||
+      isNaN(Number(form.amount)) ||
+      Number(form.amount) <= 0
+    ) {
       errs.amount = "Amount must be a positive number";
+    }
+    if (!form.type) {
+      errs.type = "Type is required";
     }
     if (!form.category) {
       errs.category = "Category is required";
@@ -75,13 +96,20 @@ export default function TransactionForm({ transaction, onClose, onSubmit }: Tran
         category: form.category,
         description: form.description,
         date: form.date,
+        type: form.type,
       };
       if (onSubmit) {
         onSubmit(data); // call parent callback for add or edit
       }
       // Reset form if not editing
       if (!transaction) {
-        setForm({ amount: "", category: "", description: "", date: "" });
+        setForm({
+          amount: "",
+          category: "",
+          description: "",
+          date: "",
+          type: "",
+        });
       }
       setErrors({});
       onClose?.(); // close modal if provided
@@ -97,6 +125,11 @@ export default function TransactionForm({ transaction, onClose, onSubmit }: Tran
         value={form.amount}
         onChange={(v) => handleChange("amount", v)}
         error={errors.amount}
+      />
+      <TypeOfRevenue
+        value={form.type}
+        onChange={(v) => handleChange("type", v)}
+        error={errors.type}
       />
       <CategorySelect
         value={form.category}
