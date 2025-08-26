@@ -12,6 +12,10 @@ import { useAccount } from "wagmi";
 import TransactionForm from "../TransactionForm/TransactionForm";
 import WalletModal from "@/component/Modal/WalletModal";
 import { toast } from "sonner";
+import Snackbar from "@mui/material/Snackbar";
+import WalletModal from "@/component/Modal/WalletModal";
+import { toast } from "sonner";
+import WalletModal from "@/component/Modal/WalletModal"; 
 
 type TransactionTypeProps = "INCOME" | "EXPENSE";
 
@@ -38,6 +42,21 @@ export default function TransactionTable() {
   const [transaction, setTransaction] = useState<TransactionProps[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [editingTx, setEditingTx] = useState<TransactionProps | null>(null);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  // Delete integration
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
+    null
+  );
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Delete integration
+  const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
+    null
+  );
+  const [deleting, setDeleting] = useState(false);
 
   // Delete integration
   const [deleteTarget, setDeleteTarget] = useState<TransactionProps | null>(
@@ -55,7 +74,9 @@ export default function TransactionTable() {
       try {
         const res = await fetch(`/api/transactions?address=${address}`);
         const data = await res.json();
-        setTransaction(data.transactions);
+        setTransaction(
+          Array.isArray(data.transactions) ? data.transactions : []
+        );
       } catch (error) {
         console.error("Failed to fetch transactions", error);
         setTransaction([]);
@@ -74,6 +95,7 @@ export default function TransactionTable() {
       });
       if (res.ok) {
         setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
+        toast.success("Transaction deleted successfully!");
         toast.success("Transaction deleted successfully!");
       } else {
         const data = await res.json();
@@ -111,6 +133,15 @@ export default function TransactionTable() {
       }
     } catch {
       toast.error("Network/server error!");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Delete failed");
+      }
+    } catch {
+      alert("Error deleting transaction");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   }
 
@@ -118,6 +149,10 @@ export default function TransactionTable() {
 
   return (
     <>
+      <div className="w-full my-2 max-w-4xl mx-auto mt-16 sm:mx-4">
+        <div className="overflow-x-auto rounded-lg shadow">
+          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+            <thead className="bg-gray-100">
       <div className="w-full my-2 max-w-4xl mx-auto mt-16">
         <table className="w-full table-fixed border border-gray-200 rounded-lg bg-background">
           <thead className="bg-gray-100">
@@ -138,16 +173,126 @@ export default function TransactionTable() {
             </tr>
           </thead>
           <tbody>
-            {transaction.length === 0 ? (
+            {Array.isArray(transaction) && transaction.length === 0 ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center"
-                >
-                  No transactions found.
-                </td>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
+                  Date
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
+                  Description
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
+                  Amount
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase whitespace-nowrap hidden sm:table-cell">
+                  Category
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase whitespace-nowrap">
+                  Actions
+                </th>
               </tr>
-            ) : (
+            </thead>
+            <tbody>
+              {(Array.isArray(transaction) ? transaction.length : 0) === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-6 text-center text-gray-500"
+                  >
+                    No transactions found.
+                  </td>
+                </tr>
+              ) : (
+                transaction.map((tx, idx) => (
+                  <tr
+                    key={tx.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.date.slice(0, 10)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap max-w-xs truncate">
+                      {tx.description}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.amount}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap hidden sm:table-cell">
+                      {tx.category}
+                    </td>
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="mx-auto flex items-center justify-center p-2 hover:bg-gray-100 rounded-full">
+                            <MoreVertical className="cursor-pointer text-gray-600" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditingTx(tx)}>
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 hover:bg-destructive hover:text-background"
+                            onClick={() => alert(`Delete ${tx.id}`)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+                  </td>
+                </tr>
+              ) : (
+                transaction.map((tx, idx) => (
+                  <tr
+                    key={tx.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.date.slice(0, 10)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap max-w-xs truncate">
+                      {tx.description}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {tx.amount}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap hidden sm:table-cell">
+                      {tx.category}
+                    </td>
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="mx-auto flex items-center justify-center p-2 hover:bg-gray-100 rounded-full">
+                            <MoreVertical className="cursor-pointer text-gray-600" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditingTx(tx)}>
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 hover:bg-destructive hover:text-background"
+                            onClick={() => alert(`Delete ${tx.id}`)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+            ) : Array.isArray(transaction) ? (
               transaction.map((tx) => (
                 <tr key={tx.id}>
                   <td className="px-4 py-2 border-t border-gray-200 text-gray-500 text-center">
@@ -184,28 +329,62 @@ export default function TransactionTable() {
                   </td>
                 </tr>
               ))
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>
       {editingTx && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-black/50"
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
           onClick={() => setEditingTx(null)}
         >
           <div
-            className="rounded-lg max-w-md w-full"
+            className="rounded-lg max-w-md w-full bg-white p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <TransactionForm
               transaction={editingTx}
               onClose={() => setEditingTx(null)}
               onSubmit={handleEdit}
+              onSubmit={async (updatedTx) => {
+                try {
+                  setTransaction((prev) =>
+                    prev.map((tx) =>
+                      tx.id === editingTx.id ? { ...tx, ...updatedTx } : tx
+                    )
+                  );
+                  setEditingTx(null);
+                  setSnackbarMessage("Transaction edited successfully!");
+                  setSnackbarOpen(true);
+                } catch (error) {
+                  setSnackbarMessage("Failed to edit transaction.");
+                  setSnackbarOpen(true);
+                }
+              onSubmit={(updatedTx) => {
+                setTransaction((prev) =>
+                  prev.map((tx) =>
+                    tx.id === editingTx.id
+                      ? {
+                          ...tx,
+                          ...updatedTx,
+                          type: updatedTx.type.toUpperCase() as TransactionTypeProps,
+                        }
+                      : tx
+                  )
+                );
+                setEditingTx(null);
+              }}
             />
           </div>
         </div>
       )}
-
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      />
       {/* Delete Confirmation Modal */}
       <WalletModal open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
         <div className="text-center p-2">
@@ -217,6 +396,9 @@ export default function TransactionTable() {
               disabled={deleting}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
               onClick={() => handleDelete(deleteTarget!.id, address as string)}
+              onClick={() =>
+                handleDelete(deleteTarget!.id, address as string)
+              }
             >
               {deleting ? "Deleting..." : "Delete"}
             </button>
