@@ -7,8 +7,12 @@ import TransactionForm from "@/component/TransactionForm/TransactionForm";
 import TransactionTable from "@/component/TransactionTable/transactiontable";
 import dynamic from "next/dynamic";
 
-const LineChart = dynamic(() => import("@/component/Charts/linechart"), { ssr: false });
-const PieChart = dynamic(() => import("@/component/Charts/piechart"), { ssr: false });
+const LineChart = dynamic(() => import("@/component/Charts/linechart"), {
+  ssr: false,
+});
+const PieChart = dynamic(() => import("@/component/Charts/piechart"), {
+  ssr: false,
+});
 
 export default function Page() {
   return (
@@ -16,8 +20,10 @@ export default function Page() {
       <main className="bg-foreground min-h-screen">
         <Header title="LedgeX" />
         <Navbar />
-        <TransactionForm />
-        <TransactionTable />
+        <div className="flex gap-20 items-stretch justify-center">
+          <TransactionForm />
+          <TransactionTable />
+        </div>
         {/* CHART FLEX CONTAINER */}
         <div className="chart-row">
           <div className="chart-card chart-line">
@@ -27,9 +33,8 @@ export default function Page() {
             <PieChart />
           </div>
         </div>
-        
+
         <ReusableCard name="Abdul Karim" walletAddress="0xabcd1234ef567890" />
-        
       </main>
     </ProtectedRoute>
   );
