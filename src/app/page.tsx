@@ -6,6 +6,7 @@ import ReusableCard from "@/component/ReusableCard/reusablecard";
 import TransactionForm from "@/component/TransactionForm/TransactionForm";
 import TransactionTable from "@/component/TransactionTable/transactiontable";
 import dynamic from "next/dynamic";
+import { useAccount } from "wagmi";
 
 const LineChart = dynamic(() => import("@/component/Charts/linechart"), {
   ssr: false,
@@ -15,11 +16,14 @@ const PieChart = dynamic(() => import("@/component/Charts/piechart"), {
 });
 
 export default function Page() {
+  const { address, isConnected } = useAccount(); 
+
   return (
     <ProtectedRoute>
       <main className="bg-foreground min-h-screen">
         <Header title="LedgeX" />
         <Navbar />
+
         <div className="flex gap-20 items-stretch justify-center">
           <TransactionForm />
           <TransactionTable />
@@ -34,7 +38,10 @@ export default function Page() {
           </div>
         </div>
 
-        <ReusableCard name="Abdul Karim" walletAddress="0xabcd1234ef567890" />
+        <ReusableCard 
+          name={isConnected ? "Wallet Owner" : "No Wallet Connected"} 
+          walletAddress={isConnected && address ? address : "0x000...000"} 
+        />
       </main>
     </ProtectedRoute>
   );
