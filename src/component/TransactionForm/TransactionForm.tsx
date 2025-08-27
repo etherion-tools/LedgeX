@@ -8,7 +8,13 @@ import { useAccount } from "wagmi";
 import { toast } from "sonner";
 
 const categories = [
-  "Salary", "Freelance", "Business", "Investment", "Bonus", "Gift", "Others",
+  "Salary",
+  "Freelance",
+  "Business",
+  "Investment",
+  "Bonus",
+  "Gift",
+  "Others",
 ];
 
 type TransactionFormProps = {
@@ -83,13 +89,16 @@ export default function TransactionForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
+      const formattedDate = form.date
+        ? new Date(form.date).toISOString().slice(0, 10)
+        : "";
       const data = {
         ...(transaction?.id ? { id: transaction.id } : {}),
         userId,
         amount: Number(form.amount),
         category: form.category,
         description: form.description,
-        date: form.date,
+        date: formattedDate,
         type: form.type,
       };
       if (!isConnected) {
@@ -133,14 +142,37 @@ export default function TransactionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-md md:max-w-lg mx-auto bg-[#18181b] rounded-2xl p-8 shadow-lg space-y-6 border border-gray-800"
+      className="w-full max-w-sm h-full bg-[#18181b] rounded-2xl p-6 shadow-lg space-y-3 border border-gray-800"
     >
-      <AmountInput value={form.amount} onChange={(v) => handleChange("amount", v)} error={errors.amount} />
-      <TypeOfRevenue value={form.type} onChange={(v) => handleChange("type", v)} error={errors.type} />
-      <CategorySelect value={form.category} onChange={(v) => handleChange("category", v)} error={errors.category} options={categories} />
-      <DescriptionTextarea value={form.description} onChange={(v) => handleChange("description", v)} />
-      <DatePicker value={form.date} onChange={(v) => handleChange("date", v)} error={errors.date} />
-      <button type="submit" className="w-full py-3 rounded-lg font-semibold text-white transition-all bg-gradient-to-r from-purple-600 to-blue-600 hover:from-blue-600 hover:to-purple-600 focus:outline-none shadow">
+      <AmountInput
+        value={form.amount}
+        onChange={(v) => handleChange("amount", v)}
+        error={errors.amount}
+      />
+      <TypeOfRevenue
+        value={form.type}
+        onChange={(v) => handleChange("type", v)}
+        error={errors.type}
+      />
+      <CategorySelect
+        value={form.category}
+        onChange={(v) => handleChange("category", v)}
+        error={errors.category}
+        options={categories}
+      />
+      <DescriptionTextarea
+        value={form.description}
+        onChange={(v) => handleChange("description", v)}
+      />
+      <DatePicker
+        value={form.date}
+        onChange={(v) => handleChange("date", v)}
+        error={errors.date}
+      />
+      <button
+        type="submit"
+        className="w-full py-3 rounded-lg font-semibold text-white transition-all bg-gradient-to-r from-purple-600 to-blue-600 hover:from-blue-600 hover:to-purple-600 focus:outline-none shadow"
+      >
         {transaction ? "Update Transaction" : "Add Transaction"}
       </button>
       {error && <div className="text-red-500 text-sm text-center">{error}</div>}
