@@ -89,13 +89,16 @@ export default function TransactionForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
+      const formattedDate = form.date
+        ? new Date(form.date).toISOString().slice(0, 10)
+        : "";
       const data = {
         ...(transaction?.id ? { id: transaction.id } : {}),
         userId,
         amount: Number(form.amount),
         category: form.category,
         description: form.description,
-        date: form.date,
+        date: formattedDate,
         type: form.type,
       };
       if (!isConnected) {

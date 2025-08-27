@@ -94,12 +94,13 @@ export default function TransactionTable() {
   async function handleEdit(updatedTx: TransactionFormSubmit) {
     if (!editingTx) return;
     try {
-      const res = await fetch(`/api/transactions/update/${editingTx.id}`, {
+      const res = await fetch(`/api/edittransactions?address=${address}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...updatedTx,
-          userId: editingTx.userId, //  always UUID from transaction row
+          userId: editingTx.userId,
+          id: editingTx.id,
           type: updatedTx.type,
         }),
       });
