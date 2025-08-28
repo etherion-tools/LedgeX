@@ -16,13 +16,21 @@ const PieChart = dynamic(() => import("@/component/Charts/piechart"), {
 });
 
 export default function Page() {
-  const { address, isConnected } = useAccount(); 
+  const { address, isConnected } = useAccount();
 
   return (
     <ProtectedRoute>
       <main className="bg-foreground min-h-screen">
         <Header title="LedgeX" />
-        <Navbar />
+        <div className="relative">
+          <Navbar />
+          <div className="absolute right-0 top-0 m-4">
+            <ReusableCard
+              name={isConnected ? "Wallet Owner" : "No Wallet Connected"}
+              walletAddress={isConnected && address ? address : "0x000...000"}
+            />
+          </div>
+        </div>
 
         <div className="flex gap-20 items-stretch justify-center">
           <TransactionForm />
@@ -37,11 +45,6 @@ export default function Page() {
             <PieChart />
           </div>
         </div>
-
-        <ReusableCard 
-          name={isConnected ? "Wallet Owner" : "No Wallet Connected"} 
-          walletAddress={isConnected && address ? address : "0x000...000"} 
-        />
       </main>
     </ProtectedRoute>
   );

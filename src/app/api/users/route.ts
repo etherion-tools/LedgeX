@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-error: "Wallet address is required",
+          error: "Wallet address is required",
           status: 400,
         },
         { status: 400 }

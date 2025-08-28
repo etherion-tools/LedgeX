@@ -2,18 +2,42 @@
 import Header from "@/component/Header/Header";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
-  const {isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isConnected) {
       router.replace("/"); // Connected user will be redirected to the main page
     }
-  }, [isConnected, router]);
+    const fetchAddress = async () => {
+      try {
+        const res = await fetch("/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wallet_address: address }),
+        });
+        if (!res.ok) {
+          setError("Failed to send address");
+        } else {
+          setError(null);
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Network Error");
+      }
+    };
+    if (address) {
+      fetchAddress();
+    }
+  }, [isConnected, router, address]);
 
+  if (error) {
+    return <div className="text-destructive">{error}</div>;
+  }
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header: auto modal trigger */}

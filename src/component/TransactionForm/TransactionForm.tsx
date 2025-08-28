@@ -37,12 +37,14 @@ type TransactionFormProps = {
     date: string;
     type: string;
   }) => void;
+  refreshTransactions?: () => void;
 };
 
 export default function TransactionForm({
   transaction,
   onClose,
   onSubmit,
+  refreshTransactions,
 }: TransactionFormProps) {
   const [form, setForm] = useState({
     amount: transaction?.amount?.toString() || "",
@@ -115,7 +117,10 @@ export default function TransactionForm({
             body: JSON.stringify({ ...data, wallet: address }),
           });
           const result = await res.json();
-          if (res.ok) toast.success("Transaction Added Successfully!");
+          if (res.ok) {
+            toast.success("Transaction Added Successfully!");
+            if (refreshTransactions) await refreshTransactions();
+          }
           if (!res.ok) {
             toast.error("Failed to add transaction");
             return setError(result.error || "Failed to add transaction");

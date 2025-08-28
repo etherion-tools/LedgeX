@@ -49,20 +49,24 @@ export default function TransactionTable() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  useEffect(() => {
+  // Fetch transactions from API
+  const fetchTransaction = async () => {
     if (!address || !isConnected) return;
-    const fetchTransaction = async () => {
-      try {
-        const res = await fetch(`/api/transactions?address=${address}`);
-        const data = await res.json();
-        setTransaction(
-          Array.isArray(data.transactions) ? data.transactions : []
-        );
-      } catch (error) {
-        console.error("Failed to fetch transactions", error);
-        setTransaction([]);
-      }
-    };
+    try {
+      const res = await fetch(`/api/transactions?address=${address}`);
+      const data = await res.json();
+      setTransaction(Array.isArray(data.transactions) ? data.transactions : []);
+    } catch (error) {
+      console.error("Failed to fetch transactions", error);
+      setTransaction([]);
+    }
+  };
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
     fetchTransaction();
   }, [address, isConnected]);
 
@@ -75,8 +79,8 @@ export default function TransactionTable() {
         body: JSON.stringify({ walletAddress }),
       });
       if (res.ok) {
-        setTransaction((prev) => prev.filter((tx) => tx.id !== txId));
         toast.success("Transaction deleted successfully!");
+        await fetchTransaction();
       } else {
         const data = await res.json();
         toast.error(data.error || "Delete failed");
@@ -105,14 +109,9 @@ export default function TransactionTable() {
         }),
       });
       if (res.ok) {
-        const data = await res.json();
-        setTransaction((prev) =>
-          prev.map((tx) =>
-            tx.id === editingTx.id ? { ...tx, ...data.transaction } : tx
-          )
-        );
         toast.success("Transaction updated successfully!");
         setEditingTx(null);
+        await fetchTransaction();
       } else {
         const err = await res.json();
         toast.error(err.error || "Update failed!");
@@ -211,6 +210,7 @@ export default function TransactionTable() {
               transaction={editingTx}
               onClose={() => setEditingTx(null)}
               onSubmit={handleEdit}
+              refreshTransactions={fetchTransaction}
             />
           </div>
         </div>
