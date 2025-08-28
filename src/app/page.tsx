@@ -20,7 +20,7 @@ export default function Page() {
 
   return (
     <ProtectedRoute>
-      <main className="bg-foreground min-h-screen">
+      <main>
         <Header title="LedgeX" />
         <Navbar />
 
