@@ -19,7 +19,7 @@ export default function Header({ title }: HeaderProps) {
     : "";
 
   return (
-    <header className="border-b shadow-md w-full py-4 px-6 bg-blue-950 flex items-center justify-between">
+    <header className="sticky top-0 w-full border-b shadow-md py-4 px-6 bg-blue-950 flex items-center justify-between z-50">
       <span className="text-2xl font-bold text-white">{title}</span>
       <span className="text-lg flex items-center gap-2">
         {!isConnected ? (
