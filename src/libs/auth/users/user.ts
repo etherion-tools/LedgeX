@@ -23,6 +23,8 @@ export async function userinfo() {
     };
 }
 
+
+//User Creation(Prisma)
 export async function createUser({wallet_address}: {wallet_address: string}){
  
   const user = await prisma.user.upsert({
