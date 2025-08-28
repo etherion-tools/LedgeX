@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0891B2] bg-[length:400%_400%] animate-gradient-slow"
       >
         {/* Web3Provider for wagmi and react-query context */}
         <Web3Provider>
